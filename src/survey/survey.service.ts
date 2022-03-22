@@ -48,6 +48,10 @@ export class SurveyService {
     return this.surveyFormat(survey);
   }
 
+  async findByEndDate(today: Date) {
+    return await this.surveyModel.find({expireDate : {$gte: {today}} })
+  }
+
   update(id: number, updateSurveyDto: UpdateSurveyDto) {
     return `This action updates a #${id} survey`;
   }
@@ -56,12 +60,22 @@ export class SurveyService {
     return await this.removeEntity(id);
   }
 
+  async addOtpToSurvey(otp : string , surveyId : string) {
+    await this.surveyModel.findByIdAndUpdate(surveyId , {
+      $set: { otp : otp}
+    })
+
+    return true
+  }
+
   surveyFormat(survey : SurveyDocument) {
     return {
       _id: survey.sequenceId ,
       questions: survey.questions , 
       createdAt :  survey.createdAt , 
-
+      email : survey.userEmail ,
+      questionsAndAnswers :  survey.customerAnswers , 
+      otp : survey.otp
     }
   }
 
@@ -88,7 +102,7 @@ export class SurveyService {
 
       async findOneEntity(id: string) {
         const survey = await this.surveyModel.findById(id)
-        .populate('questions')
+        .populate('questions customerAnswers')
 
         
         return survey
